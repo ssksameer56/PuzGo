@@ -2,9 +2,10 @@ package puzgo
 
 import (
 	"errors"
+	"fmt"
 )
 
-func distanceAcross(board Board, x, y int) (int, error) {
+func distanceAcross(board board, x, y int) (int, error) {
 	dist := 0
 	curr := y
 	if x > board.Width || y < 0 {
@@ -19,7 +20,7 @@ func distanceAcross(board Board, x, y int) (int, error) {
 	return dist, nil
 }
 
-func distanceDown(board Board, x, y int) (int, error) {
+func distanceDown(board board, x, y int) (int, error) {
 	dist := 0
 	curr := x
 	if y > board.Height || y < 0 {
@@ -34,22 +35,28 @@ func distanceDown(board Board, x, y int) (int, error) {
 	return dist, nil
 }
 
-func isBlack(board Board, x, y int) (bool, error) {
-	if x > board.Width || y > board.Height || x < 0 || y < 0 {
-		return false, errors.New("inavlid position")
+func isAcrossClueNumber(board board, x, y int) (bool, error) {
+	if x == 0 || string(board.BoardState[x][y]) == BLANK {
+		dist, err := distanceAcross(board, x, y)
+		if err != nil {
+			return false, fmt.Errorf("error when getting number %w", err)
+		}
+		if dist >= 2 && dist < (board.Width-x) {
+			return true, nil
+		}
 	}
-	if string(board.BoardState[x][y]) == BLACK {
-		return false, nil
-	}
-	return true, nil
+	return false, nil
 }
 
-func isBlank(board Board, x, y int) (bool, error) {
-	if x > board.Width || y > board.Height || x < 0 || y < 0 {
-		return false, errors.New("inavlid position")
+func isDownClueNumber(board board, x, y int) (bool, error) {
+	if y == 0 || string(board.BoardState[x][y]) == BLANK {
+		dist, err := distanceDown(board, x, y)
+		if err != nil {
+			return false, fmt.Errorf("error when getting number %w", err)
+		}
+		if dist > 2 && dist < (board.Height-y) {
+			return true, nil
+		}
 	}
-	if string(board.BoardState[x][y]) == BLANK {
-		return false, nil
-	}
-	return true, nil
+	return false, nil
 }
