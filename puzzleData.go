@@ -26,6 +26,7 @@ type board struct {
 	Height     int
 	Width      int
 	BoardState [][]byte
+	Answers    [][]byte
 }
 
 //Store information about crossword from header and strings section in puz file
