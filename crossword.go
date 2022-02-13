@@ -129,7 +129,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing scrambledTag %w", err)
 	}
-	cw.Header.isScrambled, err = utils.ConvertToBool(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.IsScrambled, err = utils.ConvertToBool(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, err
 	}
@@ -137,12 +137,63 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 }
 
 //Parses the clues section from puz file
-func (cw *Crossword) parseClues(fp *os.File) (bool, error) {
+func (cw *Crossword) parseState(fp *os.File) (bool, error) {
+	length := cw.Header.Height * cw.Header.Width
+	byteArray, err := getDataWithSpecifiedLength(fp, stateFormat, "stateString", length)
+	if err != nil {
+		return false, err
+	}
+	stringData := string(byteArray)
+	num := 0
+	for i := 0; i < cw.Board.Width; i++ {
+		for j := 0; j < cw.Board.Height; j++ {
+			cw.Board.BoardState[i][j] = stringData[num]
+			num++
+		}
+	}
 	return true, nil
 }
 
 //Parses the state in the puz file
-func (cw *Crossword) parseState(fp *os.File) (bool, error) {
+func (cw *Crossword) parseClues(fp *os.File) (bool, error) {
+	offset := 0x34 + (cw.Header.Height * cw.Header.Width)
+	byteArray, err := getDataWithSpecifiedOffset(fp, stateFormat, "stateString", offset)
+	if err != nil {
+		return false, err
+	}
+	allClueString, err := utils.SplitByteString(byteArray, byte(0))
+	if err != nil {
+		return false, err
+	}
+	var clueSlice []clueInfo
+	count := 0
+	for i := 0; i < cw.Board.Width; i++ {
+		for j := 0; j < cw.Board.Height; j++ {
+			flag, _ := isAcrossClueNumber(cw.Board, i, j)
+			if flag {
+				clueSlice = append(clueSlice, clueInfo{
+					Position: position{
+						X: i,
+						Y: j,
+					},
+					Clue: allClueString[count],
+				})
+				count++
+			}
+			flag, _ = isDownClueNumber(cw.Board, i, j)
+			if flag {
+				clueSlice = append(clueSlice, clueInfo{
+					Position: position{
+						X: i,
+						Y: j,
+					},
+					Clue: allClueString[count],
+				})
+				count++
+			}
+		}
+	}
+	cw.Clues = clueSlice
 	return true, nil
 }
 
@@ -153,4 +204,28 @@ func getData(fp *os.File, format binaryFormat, binaryField string) ([]byte, erro
 		return []byte{}, err
 	}
 	return data, nil
+}
+
+func getDataWithSpecifiedLength(fp *os.File, format binaryFormat, binaryField string, len int) ([]byte, error) {
+	params := format[binaryField]
+	if params.Offset != -1 {
+		data, err := utils.ReadData(fp, len, params.Offset)
+		if err != nil {
+			return []byte{}, err
+		}
+		return data, nil
+	}
+	return []byte{}, fmt.Errorf("invalid offset for %s", binaryField)
+}
+
+func getDataWithSpecifiedOffset(fp *os.File, format binaryFormat, binaryField string, off int) ([]byte, error) {
+	params := format[binaryField]
+	if params.Length != -1 {
+		data, err := utils.ReadData(fp, params.Length, off)
+		if err != nil {
+			return []byte{}, err
+		}
+		return data, nil
+	}
+	return []byte{}, fmt.Errorf("invalid length for %s", binaryField)
 }

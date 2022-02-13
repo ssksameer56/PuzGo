@@ -38,8 +38,8 @@ type crosswordInfo struct {
 	Width             int    `binary:"width"`
 	Height            int    `binary:"height"`
 	NoOfClues         int16  `binary:"noOfClues"`
-	isScrambled       bool   `binary:"scrambledTag"`
-	cibChecksum       int16  `binary:"strings"`
+	IsScrambled       bool   `binary:"scrambledTag"`
+	CibChecksum       int16  `binary:"strings"`
 	LowMaskChecksum   int16  `binary:"lowMaskChecksum"`
 	HighMaskChecksum  int16  `binary:"highMaskChecksum"`
 	ScrambledChecksum int16  `binary:"scrambledChecksum"`
