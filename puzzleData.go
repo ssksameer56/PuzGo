@@ -41,8 +41,8 @@ type crosswordInfo struct {
 	NoOfClues         int16  `binary:"noOfClues"`
 	IsScrambled       bool   `binary:"scrambledTag"`
 	CibChecksum       int16  `binary:"strings"`
-	LowMaskChecksum   int16  `binary:"lowMaskChecksum"`
-	HighMaskChecksum  int16  `binary:"highMaskChecksum"`
+	LowMaskChecksum   int    `binary:"lowMaskChecksum"`
+	HighMaskChecksum  int    `binary:"highMaskChecksum"`
 	ScrambledChecksum int16  `binary:"scrambledChecksum"`
 	Checksum          int16  `binary:"checksum"`
 }

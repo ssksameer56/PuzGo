@@ -73,7 +73,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing lowMaskChecksum %w", err)
 	}
-	cw.Header.LowMaskChecksum, err = utils.ConvertToInt16(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.LowMaskChecksum, err = utils.ConvertToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, fmt.Errorf("error while parsing lowMaskChecksum %w", err)
 	}
@@ -81,7 +81,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing highMaskChecksum %w", err)
 	}
-	cw.Header.HighMaskChecksum, err = utils.ConvertToInt16(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.HighMaskChecksum, err = utils.ConvertToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, fmt.Errorf("error while parsing highMaskChecksum %w", err)
 	}
@@ -105,7 +105,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing width %w", err)
 	}
-	cw.Header.Width, err = utils.ConvertToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.Width, err = utils.ConvertByteToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, fmt.Errorf("error while parsing width %w", err)
 	}
@@ -113,7 +113,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing height %w", err)
 	}
-	cw.Header.Width, err = utils.ConvertToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.Width, err = utils.ConvertByteToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, fmt.Errorf("error while parsing height %w", err)
 	}
