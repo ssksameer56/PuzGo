@@ -1,12 +1,11 @@
 package puzgo
 
 //Constants used in crossword
-const (
-	BLANK  = "." //Denotes empty cell according to puz
-	BLACK  = "-" //Denotes a black cell according to puz
-	ACROSS = "across"
-	DOWN   = "down"
-)
+
+var BLACK string = "." //Denotes empty cell according to puz
+var BLANK string = "-" //Denotes a black cell according to puz
+var ACROSS string = "across"
+var DOWN string = "down"
 
 //Struct to map position in a crossword
 type position struct {
@@ -25,8 +24,8 @@ type clueInfo struct {
 type board struct {
 	Height     int
 	Width      int
-	BoardState [][]byte
-	Answers    [][]byte
+	BoardState [][]string
+	Answers    [][]string
 }
 
 //Store information about crossword from header and strings section in puz file

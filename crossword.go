@@ -113,7 +113,7 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error while parsing height %w", err)
 	}
-	cw.Header.Width, err = utils.ConvertByteToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
+	cw.Header.Height, err = utils.ConvertByteToInt(data) // Make sure you know if the data is LittleEndian or BigEndian
 	if err != nil {
 		return false, fmt.Errorf("error while parsing height %w", err)
 	}
@@ -139,21 +139,28 @@ func (cw *Crossword) parseHeader(fp *os.File) (bool, error) {
 //Parses the state section from puz file
 func (cw *Crossword) parseState(fp *os.File) (bool, error) {
 	length := cw.Header.Height * cw.Header.Width
+	cw.Board.Height = cw.Header.Height
+	cw.Board.Width = cw.Header.Width
+	cw.Board.BoardState = make([][]string, cw.Board.Width)
+	cw.Board.Answers = make([][]string, cw.Board.Width)
+	for i := 0; i < cw.Header.Width; i++ {
+		cw.Board.BoardState[i] = make([]string, cw.Header.Height)
+		cw.Board.Answers[i] = make([]string, cw.Header.Height)
+	}
 	byteArray, err := getDataWithSpecifiedLength(fp, stateFormat, "stateString", length)
 	if err != nil {
 		return false, fmt.Errorf("error when parsing state section %w", err)
 	}
 	stringData := string(byteArray)
 	num := 0
-	for i := 0; i < cw.Board.Width; i++ {
-		for j := 0; j < cw.Board.Height; j++ {
+	for i := 0; i < cw.Header.Width; i++ {
+		for j := 0; j < cw.Header.Height; j++ {
 			if string(stringData[num]) == BLACK {
-				cw.Board.BoardState[i][j] = stringData[num]
-				cw.Board.Answers[i][j] = stringData[num]
+				cw.Board.BoardState[i][j] = string(stringData[num])
 			} else {
-				cw.Board.BoardState[i][j] = []byte(BLANK)[0]
+				cw.Board.BoardState[i][j] = BLANK
 			}
-			cw.Board.Answers[i][j] = stringData[num]
+			cw.Board.Answers[i][j] = string(stringData[num])
 			num++
 		}
 	}
@@ -163,7 +170,9 @@ func (cw *Crossword) parseState(fp *os.File) (bool, error) {
 //Parses the clues and other strings in the puz file
 func (cw *Crossword) parseStrings(fp *os.File) (bool, error) {
 	offset := 0x34 + (cw.Header.Height * cw.Header.Width)
-	byteArray, err := getDataWithSpecifiedOffset(fp, stringsFormat, "stateString", offset)
+	fi, _ := fp.Stat()
+	length := fi.Size() - int64(offset)
+	byteArray, err := getDataWithSpecifiedOffset(fp, stringsFormat, "strings", offset, int(length))
 	if err != nil {
 		return false, fmt.Errorf("error when parsing string section %w", err)
 	}
@@ -244,10 +253,10 @@ func getDataWithSpecifiedLength(fp *os.File, format binaryFormat, binaryField st
 }
 
 //Get data but when offset is computed and not defined in format
-func getDataWithSpecifiedOffset(fp *os.File, format binaryFormat, binaryField string, off int) ([]byte, error) {
+func getDataWithSpecifiedOffset(fp *os.File, format binaryFormat, binaryField string, off int, len int) ([]byte, error) {
 	params := format[binaryField]
-	if params.Length != -1 {
-		data, err := utils.ReadData(fp, params.Length, off)
+	if params.Length == -1 {
+		data, err := utils.ReadData(fp, len, off)
 		if err != nil {
 			return []byte{}, fmt.Errorf("error when reading %w", err)
 		}
