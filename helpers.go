@@ -6,13 +6,13 @@ import (
 )
 
 func distanceAcross(board board, x, y int) (int, error) {
-	dist := 0
+	dist := 1
 	curr := y
-	if x > board.Width || y < 0 {
+	if x > board.Width || x < 0 {
 		return -1, errors.New("inavlid position")
 	}
-	for curr = y + 1; curr < board.Width; curr++ {
-		if string(board.BoardState[x][curr]) == BLACK || string(board.BoardState[x][curr]) == BLANK {
+	for curr = y + 1; curr < board.Height; curr++ {
+		if string(board.BoardState[x][curr]) == BLACK {
 			break
 		}
 		dist++
@@ -21,13 +21,13 @@ func distanceAcross(board board, x, y int) (int, error) {
 }
 
 func distanceDown(board board, x, y int) (int, error) {
-	dist := 0
+	dist := 1
 	curr := x
 	if y > board.Height || y < 0 {
 		return -1, errors.New("inavlid position")
 	}
-	for curr = x + 1; curr < board.Height; curr++ {
-		if string(board.BoardState[curr][x]) == BLACK || string(board.BoardState[curr][x]) == BLANK {
+	for curr = x + 1; curr < board.Width; curr++ {
+		if string(board.BoardState[curr][y]) == BLACK {
 			break
 		}
 		dist++
@@ -36,12 +36,12 @@ func distanceDown(board board, x, y int) (int, error) {
 }
 
 func isAcrossClueNumber(board board, x, y int) (bool, error) {
-	if x == 0 || string(board.BoardState[x][y]) == BLANK {
+	if y == 0 || string(board.BoardState[x][y-1]) == BLACK {
 		dist, err := distanceAcross(board, x, y)
 		if err != nil {
 			return false, fmt.Errorf("error when getting number %w", err)
 		}
-		if dist >= 2 && dist < (board.Width-x) {
+		if dist >= 2 {
 			return true, nil
 		}
 	}
@@ -49,14 +49,24 @@ func isAcrossClueNumber(board board, x, y int) (bool, error) {
 }
 
 func isDownClueNumber(board board, x, y int) (bool, error) {
-	if y == 0 || string(board.BoardState[x][y]) == BLANK {
+	if x == 0 || string(board.BoardState[x-1][y]) == BLACK {
 		dist, err := distanceDown(board, x, y)
 		if err != nil {
 			return false, fmt.Errorf("error when getting number %w", err)
 		}
-		if dist > 2 && dist < (board.Height-y) {
+		if dist > 2 {
 			return true, nil
 		}
+	}
+	return false, nil
+}
+
+func isBlackCell(board board, x, y int) (bool, error) {
+	if x < 0 || y < 0 || x > board.Width || y > board.Height {
+		return false, errors.New("Invalid coordinate")
+	}
+	if board.BoardState[x][y] == BLACK {
+		return true, nil
 	}
 	return false, nil
 }

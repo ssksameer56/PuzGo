@@ -147,32 +147,42 @@ func (cw *Crossword) parseState(fp *os.File) (bool, error) {
 		cw.Board.BoardState[i] = make([]string, cw.Header.Height)
 		cw.Board.Answers[i] = make([]string, cw.Header.Height)
 	}
-	byteArray, err := getDataWithSpecifiedLength(fp, stateFormat, "stateString", length)
+	byteArray, err := getDataWithSpecifiedLength(fp, stateFormat, "answerString", length)
 	if err != nil {
-		return false, fmt.Errorf("error when parsing state section %w", err)
+		return false, fmt.Errorf("error when parsing answers section %w", err)
 	}
+	//Parse the correct answer state
 	stringData := string(byteArray)
 	num := 0
 	for i := 0; i < cw.Header.Width; i++ {
 		for j := 0; j < cw.Header.Height; j++ {
-			if string(stringData[num]) == BLACK {
-				cw.Board.BoardState[i][j] = string(stringData[num])
-			} else {
-				cw.Board.BoardState[i][j] = BLANK
-			}
 			cw.Board.Answers[i][j] = string(stringData[num])
 			num++
 		}
 	}
+	offset := stateFormat["answerString"].Offset + (cw.Header.Height * cw.Header.Width)
+	byteArray, err = getDataWithSpecifiedOffsetLength(fp, stateFormat, "playerStateString", offset, length)
+	if err != nil {
+		return false, fmt.Errorf("error when parsing state section %w", err)
+	}
+	stringData = string(byteArray)
+	num = 0
+	for i := 0; i < cw.Header.Width; i++ {
+		for j := 0; j < cw.Header.Height; j++ {
+			cw.Board.BoardState[i][j] = string(stringData[num])
+			num++
+		}
+	}
+	//
 	return true, nil
 }
 
 //Parses the clues and other strings in the puz file
 func (cw *Crossword) parseStrings(fp *os.File) (bool, error) {
-	offset := 0x34 + (cw.Header.Height * cw.Header.Width)
+	offset := 0x34 + 2*(cw.Header.Height*cw.Header.Width)
 	fi, _ := fp.Stat()
 	length := fi.Size() - int64(offset)
-	byteArray, err := getDataWithSpecifiedOffset(fp, stringsFormat, "strings", offset, int(length))
+	byteArray, err := getDataWithSpecifiedOffsetLength(fp, stringsFormat, "strings", offset, int(length))
 	if err != nil {
 		return false, fmt.Errorf("error when parsing string section %w", err)
 	}
@@ -188,38 +198,50 @@ func (cw *Crossword) parseStrings(fp *os.File) (bool, error) {
 	cw.Header.Copyright = allString[count]
 	count++
 
+	clueNumber := 1
 	var clueSlice []clueInfo
 	for i := 0; i < cw.Board.Width; i++ {
 		for j := 0; j < cw.Board.Height; j++ {
-			flag, err := isAcrossClueNumber(cw.Board, i, j)
+			blackFlag, _ := isBlackCell(cw.Board, i, j)
+			if blackFlag {
+				continue
+			}
+			acrossFlag, err := isAcrossClueNumber(cw.Board, i, j)
 			if err != nil {
 				cw.Clues = clueSlice
 				return false, fmt.Errorf("error when assigning clue numbers %w", err)
 			}
-			if flag {
+			if acrossFlag {
 				clueSlice = append(clueSlice, clueInfo{
 					Position: position{
 						X: i,
 						Y: j,
 					},
-					Clue: allString[count],
+					Clue:      allString[count],
+					Number:    clueNumber,
+					Direction: ACROSS,
 				})
 				count++
 			}
-			flag, _ = isDownClueNumber(cw.Board, i, j)
+			downFlag, _ := isDownClueNumber(cw.Board, i, j)
 			if err != nil {
 				cw.Clues = clueSlice
 				return false, fmt.Errorf("error when assiging clue numbers %w", err)
 			}
-			if flag {
+			if downFlag {
 				clueSlice = append(clueSlice, clueInfo{
 					Position: position{
 						X: i,
 						Y: j,
 					},
-					Clue: allString[count],
+					Clue:      allString[count],
+					Number:    clueNumber,
+					Direction: DOWN,
 				})
 				count++
+			}
+			if acrossFlag || downFlag {
+				clueNumber++
 			}
 		}
 	}
@@ -253,7 +275,7 @@ func getDataWithSpecifiedLength(fp *os.File, format binaryFormat, binaryField st
 }
 
 //Get data but when offset is computed and not defined in format
-func getDataWithSpecifiedOffset(fp *os.File, format binaryFormat, binaryField string, off int, len int) ([]byte, error) {
+func getDataWithSpecifiedOffsetLength(fp *os.File, format binaryFormat, binaryField string, off int, len int) ([]byte, error) {
 	params := format[binaryField]
 	if params.Length == -1 {
 		data, err := utils.ReadData(fp, len, off)

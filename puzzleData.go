@@ -15,9 +15,10 @@ type position struct {
 
 //Struct to store a clue(number, position and string)
 type clueInfo struct {
-	Position position
-	Number   int
-	Clue     string
+	Position  position
+	Number    int
+	Clue      string
+	Direction string
 }
 
 //Struct to keep the board state(empty,filled,black) cells

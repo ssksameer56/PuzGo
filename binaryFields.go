@@ -60,8 +60,12 @@ var headerFormat = binaryFormat{
 }
 
 var stateFormat = binaryFormat{
-	"stateString": field{
+	"answerString": field{
 		Offset: 0x34,
+		Length: -1,
+	},
+	"playerStateString": field{
+		Offset: -1,
 		Length: -1,
 	},
 }
