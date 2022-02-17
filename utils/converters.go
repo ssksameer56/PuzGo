@@ -45,7 +45,12 @@ func SplitByteString(data []byte, delim byte) ([]string, error) {
 	var stringsData []string
 	masterString := string(data)
 	stringsData = strings.Split(masterString, string(delim))
-	return stringsData, nil
+	var stringsFormatted []string
+	for _, x := range stringsData {
+		xFormatted := strings.Trim(x, " ")
+		stringsFormatted = append(stringsFormatted, string(xFormatted))
+	}
+	return stringsFormatted, nil
 }
 
 func ConvertToBool(data []byte) (bool, error) {

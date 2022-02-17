@@ -54,4 +54,11 @@ func TestCrossword(t *testing.T) {
 	if err != nil || !flag {
 		t.Errorf("couldnt parse crossword %s", err)
 	}
+	if cw.Clues[0].Clue != "\"Spare tire \"" || cw.Clues[0].Direction != ACROSS || cw.Clues[0].Number != 1 {
+		t.Error("clue not parsed")
+	}
+	length := len(cw.Clues)
+	if cw.Clues[length-1].Clue != "Walter ___ Hospital" || cw.Clues[0].Direction != ACROSS || cw.Clues[0].Number != 71 {
+		t.Error("clue not parsed")
+	}
 }

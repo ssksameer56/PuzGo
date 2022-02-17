@@ -63,7 +63,7 @@ func isDownClueNumber(board board, x, y int) (bool, error) {
 
 func isBlackCell(board board, x, y int) (bool, error) {
 	if x < 0 || y < 0 || x > board.Width || y > board.Height {
-		return false, errors.New("Invalid coordinate")
+		return false, errors.New("invalid coordinate")
 	}
 	if board.BoardState[x][y] == BLACK {
 		return true, nil
